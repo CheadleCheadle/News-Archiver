@@ -10,7 +10,15 @@ const puppeteer = require('puppeteer');
         const articleElements = await page.$$('.thumbs-2-7 article');
 
         for (const articleElement of articleElements) {
-            const imageSrc = await articleElement.$eval('img', img => img.src);
+            let imageSrc;
+            //To handle videos and images
+            try {
+                 imageSrc = await articleElement.$eval('img', img => img.src);
+            } catch {
+                imageSrc = await articleElement.$eval('source', video => video.src);
+            }
+            //---
+
             const title = await articleElement.$eval('.title a', anchor => anchor.textContent);
             const url = await articleElement.$eval('.title a', anchor => anchor.href);
 
