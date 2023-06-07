@@ -15,7 +15,7 @@ async function trending_article_thumbnails() {
         const articleSelector = '.content.article-list.small-shelf article';
         const secondArticleElements = await page.$$(articleSelector);
 
-        const articles = [];
+        const articles = {};
 
 
         for (const articleElement of articleElements) {
@@ -30,7 +30,7 @@ async function trending_article_thumbnails() {
             const title = await articleElement.$eval('.title a', anchor => anchor.textContent);
             const url = await articleElement.$eval('.title a', anchor => anchor.href);
 
-            articles.push({ imageSrc, title, url });
+            articles[title] = { imageSrc, title, url };
         }
 
         for (const article of secondArticleElements) {
@@ -47,8 +47,10 @@ async function trending_article_thumbnails() {
                 //     //---
                 const title = await article.$eval('h3.title a', (a) => a.textContent);
                 const url = await article.$eval('h3.title a', (a) => a.getAttribute('href'));
-
-                articles.push({ imageSrc, title, url });
+                // Ignore HTML Element that contains the Daily Crossword Puzzle
+                if (title !== "PLAY HERE: Check out the latest edition of the Fox News Daily Crossword Puzzle") {
+                    articles[title] = { imageSrc, title, url };
+                }
 
             } catch {
                 break;
@@ -68,27 +70,70 @@ async function trending_article_thumbnails() {
 
 
 trending_article_thumbnails()
-.then((articles) => {
-    console.log("wasd", articles, articles.length);
-})
+    .then((articles) => {
+        console.log("articles", articles, articles.length);
+        trending_articles_details(articles);
+    })
 
 async function trending_articles_details(articles) {
 
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-        // Delay Function to prevent too many requests
-        const delay = ms => new Promise(res => setTimeout(res, ms))
+    // Delay Function to prevent too many requests within a short timespan
+    const delay = ms => new Promise(res => setTimeout(res, ms))
 
-        for (const article of articles) {
+    const articleDetails = {};
+
+    const browser = await puppeteer.launch();
+    try {
+
+        const page = await browser.newPage();
+
+        for (const title in articles) {
+            const article = articles[title];
             console.log(`Going to: ${article.url}`);
             await page.goto(article.url);
-        //     /*
-        //     Scrape article content
-        //     Images
-        //     Take screenshots
-        //     */
-            await delay(5000);
-        }
+            //     /*
+            //     Scrape article content
+            //     Images
+            //     Take screenshots
+            //     */
+            // --- Try Catch to handle redirects to video pages and article pages.
+            let publishingDate;
+            let headline;
+            let subheadline;
+            let articleParagraphs;
+            try {
+                publishingDate = await page.$eval('.article-date time', element => element.textContent.trim());
+                headline = await page.$eval('.headline', element => element.textContent.trim());
+                subheadline = await page.$eval('.sub-headline', element => element.textContent.trim());
+                articleParagraphs = await page.$$eval('.article-body p', paragraphs => {
+                    return paragraphs.map(p => p.textContent.trim());
+                });
+                articleDetails[headline] = { headline, subheadline, articleParagraphs }
+            } catch {
+                // --- Video Page HTML format is different
+                try {
+                    publishingDate = await page.$eval('.publish-date time', element => element.textContent.trim());
+                } catch {
+                    publishingDate = await page.$eval('.live', element => element.textContent.trim());
+                }
+                headline = await page.$eval('.title', element => element.textContent.trim());
+                subheadline = await page.$eval('.dek', element => element.textContent.trim());
+                articleParagraphs = await page.$$eval('.article-body p', paragraphs => {
+                    return paragraphs.map(p => p.textContent.trim());
+                });
 
+                articleDetails[headline] = { headline, subheadline, articleParagraphs }
+            }
+
+            await delay(2000);
+        }
+    } catch (e) {
+        console.log("Scrape failed", e);
+    }
+    finally {
+        browser?.close();
+    }
+
+    console.log(articleDetails);
 
 }
