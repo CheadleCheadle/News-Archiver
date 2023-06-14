@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 
-async function trending_article_thumbnails() {
+async function trending_article_thumbnails_fox() {
     const browser = await puppeteer.launch();
     try {
         const page = await browser.newPage();
@@ -69,11 +69,11 @@ async function trending_article_thumbnails() {
 };
 
 
-trending_article_thumbnails()
-    .then((articles) => {
-        console.log("articles", articles, articles.length);
-        trending_articles_details(articles);
-    })
+// trending_article_thumbnails_fox()
+//     .then((articles) => {
+//         console.log("articles", articles, articles.length);
+//         trending_articles_details(articles);
+//     })
 
 async function trending_articles_details(articles) {
 
@@ -137,3 +137,36 @@ async function trending_articles_details(articles) {
     console.log(articleDetails);
 
 }
+
+
+async function trending_article_thumbnails_cnn() {
+    const browser = await puppeteer.launch();
+    try {
+        const page = await browser.newPage();
+        await page.goto('https://www.cnn.com/us');
+        const imageURL = await page.evaluate(() => {
+        const imageElement = document.querySelector('.image__dam-img');
+        return imageElement ? imageElement.getAttribute('src') : null;
+        });
+        const title = await page.evaluate(() => {
+        const titleElement = document.querySelector('.container__headline span[data-editable="headline"]');
+        return titleElement ? titleElement.textContent : null;
+        });
+        console.log('Image URL:', imageURL);
+        console.log('Title:', title);
+        const article = {};
+        const articleElements = await page.$$('.container__field-links card')
+
+        for (const articleElement of articleElements) {
+            let imageSrc;
+        }
+    } catch (e) {
+        console.log("Scrape has failed:", e);
+    }
+    finally {
+        await browser.close();
+    }
+
+}
+
+trending_article_thumbnails_cnn();
