@@ -144,22 +144,21 @@ async function trending_article_thumbnails_cnn() {
     try {
         const page = await browser.newPage();
         await page.goto('https://www.cnn.com/us');
-        const imageURL = await page.evaluate(() => {
-        const imageElement = document.querySelector('.image__dam-img');
-        return imageElement ? imageElement.getAttribute('src') : null;
-        });
-        const title = await page.evaluate(() => {
-        const titleElement = document.querySelector('.container__headline span[data-editable="headline"]');
-        return titleElement ? titleElement.textContent : null;
-        });
-        console.log('Image URL:', imageURL);
-        console.log('Title:', title);
-        const article = {};
-        const articleElements = await page.$$('.container__field-links card')
 
-        for (const articleElement of articleElements) {
-            let imageSrc;
-        }
+        const imageUrls = await page.$$eval('.container_lead-plus-headlines__item-media img', (images) =>
+            images.map((img) => img.src)
+        );
+
+        const titles = await page.$$eval('.container_lead-plus-headlines__headline span', (spans) =>
+            spans.map((span) => span.textContent)
+        );
+
+        console.log('Image URLs:');
+        console.log(imageUrls);
+        console.log('\nTitles:');
+        console.log(titles);
+
+
     } catch (e) {
         console.log("Scrape has failed:", e);
     }
