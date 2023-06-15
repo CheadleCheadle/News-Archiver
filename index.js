@@ -142,6 +142,7 @@ async function trending_articles_details(articles) {
 async function trending_article_thumbnails_cnn() {
     const browser = await puppeteer.launch();
     try {
+
         const page = await browser.newPage();
         await page.goto('https://www.cnn.com/us');
 
