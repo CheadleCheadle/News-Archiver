@@ -138,7 +138,7 @@ async function trending_articles_details(articles) {
 
 }
 
-
+// Scrape trending article thumbnails from CNN
 async function trending_article_thumbnails_cnn() {
     const browser = await puppeteer.launch();
     try {
