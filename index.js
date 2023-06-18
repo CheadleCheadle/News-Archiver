@@ -69,11 +69,11 @@ async function trending_article_thumbnails_fox() {
 };
 
 
-// trending_article_thumbnails_fox()
-//     .then((articles) => {
-//         console.log("articles", articles, articles.length);
-//         trending_articles_details(articles);
-//     })
+trending_article_thumbnails_fox()
+    .then((articles) => {
+        console.log("articles", articles, articles.length);
+        trending_articles_details(articles);
+    })
 
 async function trending_articles_details(articles) {
 
