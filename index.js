@@ -10,7 +10,7 @@ async function trending_article_thumbnails_fox() {
         const mainStory = await page.$('.story-1');
         const articleElements = await page.$$('.thumbs-2-7 article');
         // The main story isn't in the .thumbs-2-7 element so it has to be added seperately.
-        articleElements.unshift(mainStory);
+            articleElements.unshift(mainStory);
 
         const articleSelector = '.content.article-list.small-shelf article';
         const secondArticleElements = await page.$$(articleSelector);
@@ -69,11 +69,11 @@ async function trending_article_thumbnails_fox() {
 };
 
 
-trending_article_thumbnails_fox()
-    .then((articles) => {
-        console.log("articles", articles, articles.length);
-        trending_articles_details(articles);
-    })
+// trending_article_thumbnails_fox()
+// .then((articles) => {
+    //      console.log("articles", articles, articles.length);
+    //       trending_articles_details(articles);
+    //    })
 
 async function trending_articles_details(articles) {
 
@@ -92,12 +92,12 @@ async function trending_articles_details(articles) {
             console.log(`Going to: ${article.url}`);
             await page.goto(article.url);
             //     /*
-            //     Scrape article content
+                //     Scrape article content
             //     Images
             //     Take screenshots
             //     */
-            // --- Try Catch to handle redirects to video pages and article pages.
-            let publishingDate;
+                // --- Try Catch to handle redirects to video pages and article pages.
+                let publishingDate;
             let headline;
             let subheadline;
             let articleParagraphs;
@@ -146,6 +146,12 @@ async function trending_article_thumbnails_cnn() {
         const page = await browser.newPage();
         await page.goto('https://www.cnn.com/us');
 
+        const imgSrc = await page.evaluate(() => {
+            const img = document.querySelector('.image__dam-img');
+            return img.src;
+        });
+
+
         const imageUrls = await page.$$eval('.container_lead-plus-headlines__item-media img', (images) =>
             images.map((img) => img.src)
         );
@@ -154,10 +160,26 @@ async function trending_article_thumbnails_cnn() {
             spans.map((span) => span.textContent)
         );
 
-        console.log('Image URLs:');
-        console.log(imageUrls);
-        console.log('\nTitles:');
-        console.log(titles);
+        //console.log('Image URLs:');
+        //console.log(imgSrc);
+        //console.log(imageUrls);
+        //console.log('\nTitles:');
+        //console.log(titles);
+        //
+              const urls = await page.evaluate(() => {
+    const articles = Array.from(document.querySelectorAll('.container_lead-plus-headlines__item'));
+    return articles.map(article => {
+      const linkElement = article.querySelector('.container__link');
+      return linkElement.href;
+    });
+  });
+
+  console.log(urls);
+
+
+
+
+
 
 
     } catch (e) {
@@ -168,5 +190,11 @@ async function trending_article_thumbnails_cnn() {
     }
 
 }
-
+// Test Invocation
 trending_article_thumbnails_cnn();
+
+/*
+* Don't need to scrape the thumbnails and titles;
+* Just scrape each article details and use info collected there to create trending_article_thumbnails_cnn
+* 
+*/
