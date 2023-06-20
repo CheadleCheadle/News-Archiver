@@ -140,6 +140,8 @@ async function trending_articles_details_fox(articles) {
 
 // Scrape trending article thumbnails from CNN
 async function trending_article_urls() {
+    // Query for all HREFS and then filter locally to get everything
+    //
     const browser = await puppeteer.launch();
     try {
 
@@ -150,10 +152,15 @@ async function trending_article_urls() {
             const articles = Array.from(document.querySelectorAll('.container_lead-plus-headlines__item'));
             return articles.map(article => {
                 const linkElement = article.querySelector('.container__link');
-                return linkElement.href;
+                // Filter out all hrefs that dont specifically go to CNN;
+                const url = linkElement.href;
+                if (url.split('').slice(0, 19).join('') == 'https://www.cnn.com') {
+                    return linkElement.href;
+                }
             });
         });
 
+        console.log("hi",urls[0].split('').slice(0, 19).join(''));
         return urls;
 
     } catch (e) {
@@ -176,6 +183,21 @@ async function trending_articles_details_cnn(urls) {
             try {
                 await page.goto(url)
                 console.log('Going to', url);
+                const title = await page.$eval('.headline__wrapper h1', (title) => {
+                    return title.textContent;
+                })
+                //const title = await page.$('.headline__text').textContent;
+                console.log("title", title);
+
+
+
+
+
+
+
+
+
+
 
             } catch (error) {
                 console.log("Failed to goto new URL", error);
