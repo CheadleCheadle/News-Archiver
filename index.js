@@ -72,10 +72,10 @@ async function trending_article_thumbnails_fox() {
 // trending_article_thumbnails_fox()
 // .then((articles) => {
     //      console.log("articles", articles, articles.length);
-    //       trending_articles_details(articles);
+    //       trending_articles_details_fox(articles);
     //    })
 
-async function trending_articles_details(articles) {
+async function trending_articles_details_fox(articles) {
 
     // Delay Function to prevent too many requests within a short timespan
     const delay = ms => new Promise(res => setTimeout(res, ms))
@@ -139,48 +139,22 @@ async function trending_articles_details(articles) {
 }
 
 // Scrape trending article thumbnails from CNN
-async function trending_article_thumbnails_cnn() {
+async function trending_article_urls() {
     const browser = await puppeteer.launch();
     try {
 
         const page = await browser.newPage();
         await page.goto('https://www.cnn.com/us');
 
-        const imgSrc = await page.evaluate(() => {
-            const img = document.querySelector('.image__dam-img');
-            return img.src;
+        const urls = await page.evaluate(() => {
+            const articles = Array.from(document.querySelectorAll('.container_lead-plus-headlines__item'));
+            return articles.map(article => {
+                const linkElement = article.querySelector('.container__link');
+                return linkElement.href;
+            });
         });
 
-
-        const imageUrls = await page.$$eval('.container_lead-plus-headlines__item-media img', (images) =>
-            images.map((img) => img.src)
-        );
-
-        const titles = await page.$$eval('.container_lead-plus-headlines__headline span', (spans) =>
-            spans.map((span) => span.textContent)
-        );
-
-        //console.log('Image URLs:');
-        //console.log(imgSrc);
-        //console.log(imageUrls);
-        //console.log('\nTitles:');
-        //console.log(titles);
-        //
-              const urls = await page.evaluate(() => {
-    const articles = Array.from(document.querySelectorAll('.container_lead-plus-headlines__item'));
-    return articles.map(article => {
-      const linkElement = article.querySelector('.container__link');
-      return linkElement.href;
-    });
-  });
-
-  console.log(urls);
-
-
-
-
-
-
+        return urls;
 
     } catch (e) {
         console.log("Scrape has failed:", e);
@@ -190,11 +164,43 @@ async function trending_article_thumbnails_cnn() {
     }
 
 }
+
+async function trending_articles_details_cnn(urls) {
+    console.log("These are the URLS for the func", urls)
+    const browser = await puppeteer.launch();
+    const delay = ms => new Promise(res => setTimeout(res, ms))
+    try {
+        const page = await browser.newPage();
+
+        for (url of urls) {
+            try {
+                await page.goto(url)
+                console.log('Going to', url);
+
+            } catch (error) {
+                console.log("Failed to goto new URL", error);
+            }
+            await delay(2000);
+        }
+
+    } catch(e) {
+        console.log("Whole thing failed...", e);
+    }
+    finally {
+        await browser.close();
+    }
+
+}
+
 // Test Invocation
-trending_article_thumbnails_cnn();
+const urls = trending_article_urls()
+    .then((d) => {
+        //console.log("These are the URLS",d);
+        trending_articles_details_cnn(d);
+    });
 
 /*
-* Don't need to scrape the thumbnails and titles;
+    * Don't need to scrape the thumbnails and titles;
 * Just scrape each article details and use info collected there to create trending_article_thumbnails_cnn
-* 
-*/
+    * 
+    */
