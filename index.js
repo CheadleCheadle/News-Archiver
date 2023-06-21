@@ -148,7 +148,7 @@ async function trending_article_urls() {
         const page = await browser.newPage();
         await page.goto('https://www.cnn.com/us');
 
-        const urls = await page.evaluate(() => {
+        const urls2 = await page.evaluate(() => {
             const articles = Array.from(document.querySelectorAll('.container_lead-plus-headlines__item'));
             return articles.map(article => {
                 const linkElement = article.querySelector('.container__link');
@@ -159,9 +159,23 @@ async function trending_article_urls() {
                 }
             });
         });
+    const urls = await page.$$eval('.zone--t-light a', anchors => anchors.map(a => {
+        const url = a.href;
+            if (url.split('').slice(0, 19).join('') == 'https://www.cnn.com') {
+                    return url;
+                }
+    }));
 
-        console.log("hi",urls[0].split('').slice(0, 19).join(''));
-        return urls;
+
+
+
+        return [...new Set(urls.filter((el) => el !== null))].filter(url => {
+            if (url.split('').slice(0, 21).join('') === 'https://www.cnn.com/2' || url.split('').slice(0, 27).join('') === 'https://www.cnn.com/videos/') {
+                return true;
+            } else {
+                return false;
+            }
+        });
 
     } catch (e) {
         console.log("Scrape has failed:", e);
@@ -186,7 +200,6 @@ async function trending_articles_details_cnn(urls) {
                 const title = await page.$eval('.headline__wrapper h1', (title) => {
                     return title.textContent;
                 })
-                //const title = await page.$('.headline__text').textContent;
                 console.log("title", title);
 
 
@@ -217,12 +230,13 @@ async function trending_articles_details_cnn(urls) {
 // Test Invocation
 const urls = trending_article_urls()
     .then((d) => {
-        //console.log("These are the URLS",d);
+        console.log("These are the URLS",d);
         trending_articles_details_cnn(d);
     });
 
 /*
     * Don't need to scrape the thumbnails and titles;
 * Just scrape each article details and use info collected there to create trending_article_thumbnails_cnn
+    * When adding to DB, check ifn title already exists. If it doesn't add the article details.
     * 
     */
