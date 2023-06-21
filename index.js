@@ -69,11 +69,11 @@ async function trending_article_thumbnails_fox() {
 };
 
 
-// trending_article_thumbnails_fox()
-// .then((articles) => {
-    //      console.log("articles", articles, articles.length);
-    //       trending_articles_details_fox(articles);
-    //    })
+ trending_article_thumbnails_fox()
+ .then((articles) => {
+          console.log("articles", articles, articles.length);
+           trending_articles_details_fox(articles);
+        })
 
 async function trending_articles_details_fox(articles) {
 
@@ -101,6 +101,9 @@ async function trending_articles_details_fox(articles) {
             let headline;
             let subheadline;
             let articleParagraphs;
+            const timestamp = new Date().toISOString().replace(/:/g, '-');;
+            await page.screenshot({ path: `./FOX_images/screenshot-${timestamp}.png` })
+
             try {
                 publishingDate = await page.$eval('.article-date time', element => element.textContent.trim());
                 headline = await page.$eval('.headline', element => element.textContent.trim());
@@ -121,7 +124,6 @@ async function trending_articles_details_fox(articles) {
                 articleParagraphs = await page.$$eval('.article-body p', paragraphs => {
                     return paragraphs.map(p => p.textContent.trim());
                 });
-
                 articleDetails[headline] = { headline, subheadline, articleParagraphs }
             }
 
@@ -167,15 +169,18 @@ async function trending_article_urls() {
     }));
 
 
+        if (urls) {
+            return [...new Set(urls.filter((el) => el !== null))].filter(url => {
+                if (url.split('').slice(0, 21).join('') === 'https://www.cnn.com/2' || url.split('').slice(0, 27).join('') === 'https://www.cnn.com/videos/') {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+        } else {
+            return false;
+        }
 
-
-        return [...new Set(urls.filter((el) => el !== null))].filter(url => {
-            if (url.split('').slice(0, 21).join('') === 'https://www.cnn.com/2' || url.split('').slice(0, 27).join('') === 'https://www.cnn.com/videos/') {
-                return true;
-            } else {
-                return false;
-            }
-        });
 
     } catch (e) {
         console.log("Scrape has failed:", e);
@@ -196,11 +201,24 @@ async function trending_articles_details_cnn(urls) {
         for (url of urls) {
             try {
                 await page.goto(url)
-                console.log('Going to', url);
                 const title = await page.$eval('.headline__wrapper h1', (title) => {
                     return title.textContent;
+                });
+
+                const mainImage = await page.$eval('.image__picture img', img => {
+                    return img.src;
                 })
+
+                const articleParagraphs = await page.$$eval('.paragraph', paragraphs => {
+                    return paragraphs.map(p => p.textContent.trim());
+                });
+
+                const timestamp = new Date().toISOString().replace(/:/g, '-');;
+                await page.screenshot({ path: `./CNN_images/screenshot-${timestamp}.png` })
                 console.log("title", title);
+                console.log("img URL", mainImage);
+                console.log("URL", url)
+                //console.log('paragraphs', articleParagraphs);
 
 
 
@@ -214,8 +232,9 @@ async function trending_articles_details_cnn(urls) {
 
             } catch (error) {
                 console.log("Failed to goto new URL", error);
+
             }
-            await delay(2000);
+           await delay(2000);
         }
 
     } catch(e) {
@@ -228,11 +247,15 @@ async function trending_articles_details_cnn(urls) {
 }
 
 // Test Invocation
-const urls = trending_article_urls()
-    .then((d) => {
-        console.log("These are the URLS",d);
-        trending_articles_details_cnn(d);
-    });
+// const urls = trending_article_urls()
+   // .then((d) => {
+     //   console.log("These are the URLS",d);
+      //  if (d) {
+        //    trending_articles_details_cnn(d);
+         //} else {
+             //console.log("Didnt work! Use a loop and try again mabye 10 times?");
+     //   }
+    //});
 
 /*
     * Don't need to scrape the thumbnails and titles;
